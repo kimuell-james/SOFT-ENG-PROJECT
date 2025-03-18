@@ -1,5 +1,5 @@
 import streamlit as st
-from dataloader import load_csv
+from dataloader import DataLoader
 
 st.set_page_config(
     page_title="Data Overview"
@@ -9,6 +9,7 @@ st.title("Data Overview")
 
 file_path = "./data/synthetic_student_data.csv"
 
-df = load_csv(file_path)
+loader = DataLoader(file_path)
+df = loader.load_data()
 
 st.dataframe(df)

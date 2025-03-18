@@ -1,5 +1,5 @@
 import streamlit as st
-from dataloader import load_csv
+from dataloader import DataLoader
 from visualizations import plot_age_distribution, plot_gender_distribution, plot_track_distribution, plot_grade_distribution_g7, plot_grade_distribution_g8, plot_grade_distribution_g9, plot_grade_distribution_g10
 
 st.set_page_config(
@@ -12,7 +12,8 @@ st.header("Visualized Data")
 
 file_path = "./data/synthetic_student_data.csv"
 
-df = load_csv(file_path)
+data_loader = DataLoader(file_path)
+df = data_loader.load_data()
 
 st.subheader("Age Distribution")
 plot_age_distribution(df)

@@ -1,15 +1,10 @@
 import streamlit as st
-from dataloader import load_csv
-
-file_path = "./data/synthetic_student_data.csv"
-
-df = load_csv(file_path)
 
 st.set_page_config(
     page_title="Predictive Analytics"
 )
 
-st.title("Homepage")
+st.title("📊 Predictive Analytics for SHS Track Selection")
 
 st.header("Research Overview")
 st.write("""In this research, the goal is to develop a predictive analytics model that will 

@@ -1,6 +1,42 @@
+import streamlit as st
 import matplotlib.pyplot as plt
 import seaborn as sns
-import streamlit as st
+import pandas as pd
+
+class Visualization:
+    def __init__(self, df):
+        self.df = df
+
+    def plot_feature_importance(self, feature_importance):
+        """Visualizes feature importance."""
+        st.subheader("Feature Importance")
+        fig, ax = plt.subplots(figsize=(10, 5))
+        sns.barplot(x=list(feature_importance.keys()), y=list(feature_importance.values()), ax=ax)
+        ax.set_xticklabels(ax.get_xticklabels(), rotation=45)
+        st.pyplot(fig)
+
+    def plot_track_prediction_trends(self, df):
+        """Visualizes track prediction trends from G7 to G10."""
+        st.subheader("📈 Track Prediction Trends from G7 to G10")
+
+        track_counts = {"G7": 0, "G8": 0, "G9": 0, "G10": 0}
+
+        for grade in ["G7", "G8", "G9", "G10"]:
+            relevant_cols = [col for col in df.columns if col.startswith(grade.lower())]
+            avg_grade = df[relevant_cols].mean(axis=1)
+            track_counts[grade] = (avg_grade > 85).sum()
+
+        trend_df = pd.DataFrame.from_dict(track_counts, orient='index', columns=['Academic Track'])
+        trend_df["TVL Track"] = len(df) - trend_df["Academic Track"]
+
+        fig, ax = plt.subplots(figsize=(10, 5))
+        trend_df.plot(kind='bar', stacked=True, ax=ax, colormap='coolwarm')
+        plt.xlabel("Grade Level")
+        plt.ylabel("Number of Students")
+        plt.title("Track Prediction Trends from G7 to G10")
+        plt.legend(["Academic Track", "TVL Track"])
+        st.pyplot(fig)
+
 
 # Visualization functions
 def plot_age_distribution(df):
