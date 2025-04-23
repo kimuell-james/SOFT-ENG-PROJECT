@@ -1,0 +1,93 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.feature_selection import chi2, SelectKBest
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import classification_report, confusion_matrix
+
+class FeatureSelection:
+    def __init__(self, df):
+        self.df = df
+        self.selected_features = {}
+    
+    def select_features(self, grade_level):
+        X = self.df[[col for col in self.df.columns if col.startswith(f'g{grade_level}_')]]
+        y = self.df["track"]
+        selector = SelectKBest(score_func=chi2, k='all')
+        selector.fit(X, y)
+        scores = pd.Series(selector.scores_, index=X.columns).sort_values(ascending=False)
+        self.selected_features[grade_level] = list(scores[scores > np.percentile(scores, 50)].index)
+        return self.selected_features[grade_level]
+
+class LogisticRegressionModel:
+    def __init__(self):
+        self.models = {}
+        self.scaler = StandardScaler()
+    
+    def train_model(self, df, features, grade_level):
+        X = df[features]
+        y = df["track"]
+        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+        X_train_scaled = self.scaler.fit_transform(X_train)
+        X_test_scaled = self.scaler.transform(X_test)
+        
+        model = LogisticRegression(multi_class='multinomial', solver='lbfgs', max_iter=1000)
+        model.fit(X_train_scaled, y_train)
+        y_pred = model.predict(X_test_scaled)
+        
+        print(f"\nGrade {grade_level} Classification Report:")
+        print(classification_report(y_test, y_pred))
+        
+        self.models[grade_level] = model
+        return y_pred
+
+class FeatureImportance:
+    def __init__(self, models):
+        self.models = models
+    
+    def get_feature_importance(self, features, grade_level):
+        if grade_level not in self.models:
+            raise ValueError(f"Model for Grade {grade_level} is not trained yet.")
+        
+        importance = pd.Series(self.models[grade_level].coef_[0], index=features).sort_values(ascending=False)
+        print(f"\nFeature Importance for Grade {grade_level}:")
+        print(importance)
+        return importance
+
+class PredictionProgression:
+    def __init__(self, df):
+        self.df = df
+        self.predictions = {}
+    
+    def track_progression(self, model, features, grade_level):
+        self.predictions[grade_level] = model.predict(self.df[features])
+    
+    def visualize_progression(self):
+        df_progression = pd.DataFrame(self.predictions)
+        df_progression.insert(0, "Actual Track", self.df["track"].values)
+        print("\nPrediction Progression from Grade 7 to 10:")
+        print(df_progression.head())
+        df_progression.T.plot(marker='o')
+        plt.xlabel("Grade Level")
+        plt.ylabel("Predicted Track")
+        plt.title("Prediction Progression Over Grades")
+        plt.show()
+
+# Load data
+df = pd.read_csv("your_dataset.csv")  # Replace with actual file path
+
+# Initialize components
+feature_selector = FeatureSelection(df)
+model_trainer = LogisticRegressionModel()
+prediction_tracker = PredictionProgression(df)
+
+# Process for each grade level
+for grade in range(7, 11):
+    selected_features = feature_selector.select_features(grade)
+    model_trainer.train_model(df, selected_features, grade)
+    prediction_tracker.track_progression(model_trainer.models[grade], selected_features, grade)
+
+# Visualize prediction progression
+prediction_tracker.visualize_progression()
