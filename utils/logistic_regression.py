@@ -1,8 +1,11 @@
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+import streamlit as st
+
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
 from sklearn.preprocessing import LabelEncoder
 
 class LogisticModel:
@@ -39,6 +42,7 @@ class LogisticModel:
         self.X_test = X_test
         self.y_test = y_test
         self.y_pred = self.model.predict(X_test)
+        self.y_proba = self.model.predict_proba(X_test)
 
         self.total_predictions = len(self.y_pred)
         self.prediction_counts = dict(pd.Series(self.y_pred).value_counts())
@@ -46,6 +50,39 @@ class LogisticModel:
 
         self.df_with_predictions = filtered_df.copy()
         self.df_with_predictions['predicted_track'] = self.model.predict(filtered_df[features])
+
+    def get_s_curve_data(self):
+        # Generate S-curve data (probabilities) for overall logistic regression
+        feature_values = np.linspace(0, 1, 100)  # Range of probabilities from 0 to 1
+
+        # Create an array where each row is the feature values (same value repeated for all features)
+        X_feat = np.column_stack([feature_values for _ in range(self.X_test.shape[1])])
+        
+        # Predict probabilities for the test set
+        y_prob = self.model.predict_proba(X_feat)[:, 1]  # Assuming class 1 is the predicted class (TVL)
+
+        return feature_values, y_prob
+
+    # def plot_sigmoid_curve(self):
+    #     import streamlit as st
+
+    #     # We'll pick just one feature for visualization, e.g., the first feature
+    #     X_test = self.X_test.iloc[:, 0].values.reshape(-1, 1)
+    #     y_test = self.y_test.values
+
+    #     # Create evenly spaced values for plotting the sigmoid
+    #     X_range = np.linspace(X_test.min(), X_test.max(), 300).reshape(-1, 1)
+    #     y_prob = self.model.predict_proba(X_range)[:, 1]
+
+    #     # Plot
+    #     fig, ax = plt.subplots()
+    #     ax.scatter(X_test, y_test, color='blue', alpha=0.5, label='Actual')
+    #     ax.plot(X_range, y_prob, color='red', linewidth=2, label='Sigmoid Curve')
+    #     ax.set_xlabel("Feature")
+    #     ax.set_ylabel("Probability")
+    #     ax.set_title("Logistic Regression Sigmoid Curve")
+    #     ax.legend()
+    #     st.pyplot(ax)
 
     def calculate_grade_statistics(self, features):
         df_with_track = self.X_test.copy()

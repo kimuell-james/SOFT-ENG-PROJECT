@@ -2,7 +2,8 @@ import streamlit as st
 import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
-
+import plotly.express as px
+from scipy.stats import chi2_contingency
 from utils.feature_selection import FeatureSelector
 from utils.dataloader import load_data
 
@@ -41,17 +42,22 @@ else:
 if "gender" in df.columns:
     st.subheader("Gender Distribution Across Tracks")
 
-    # Plot distribution
-    gender_plot = pd.crosstab(df['gender'], df[target_column]).plot(kind='bar', stacked=True, figsize=(8, 5))
-    st.pyplot(gender_plot.figure)
+    # Prepare the crosstab data for plotting
+    crosstab_df = pd.crosstab(df['gender'], df[target_column])
+    crosstab_df = crosstab_df.reset_index().melt(id_vars='gender', var_name='Track', value_name='Count')
+
+    # Plot using Plotly
+    fig = px.bar(crosstab_df, x='gender', y='Count', color='Track', barmode='stack',
+                 title="Gender Distribution Across Tracks")
+
+    st.plotly_chart(fig)
 
     # Compute Chi-Square p-value
-    from scipy.stats import chi2_contingency
     contingency = pd.crosstab(df['gender'], df[target_column])
     chi2, p, dof, expected = chi2_contingency(contingency)
 
     # Show significance
-    st.markdown(f"**Chi-Square Test P-Value:** `{p:.4f}`")
+    st.markdown(f"**Chi-Square Test P-Value:** `{p}`")
     if p < 0.05:
         st.success("Gender is statistically significant in predicting the track (p < 0.05).")
     else:

@@ -21,7 +21,7 @@ st.markdown("""
 2. 🧹 **Preprocessing** – Cleans and prepares the data for analysis.  
 3. 🧠 **Feature Selection** – Identifies the most relevant subjects and profile factors influencing track selection.  
 4. 🤖 **Model Training** – Uses logistic regression to train a predictive model on the selected features.  
-5. 🎯 **Prediction & Evaluation** – Predicts the SHS track (Academic or TVL) and evaluates model accuracy across grade levels.
+5. 🎯 **Evaluation** – Predicts the SHS track (Academic or TVL) and evaluates model accuracy across grade levels.
 """)
 
 # --- Flowchart ---

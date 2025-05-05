@@ -1,11 +1,15 @@
 import streamlit as st
 import pandas as pd
+import plotly.express as px
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 from utils.dataloader import load_data
 from utils.feature_selection import FeatureSelector
 from utils.logistic_regression import LogisticModel
 
-st.title("📊 Logistic Regression Model by Grade Level")
+st.title("🤖 Logistic Regression Model by Grade Level")
 
 df = load_data()
 target_column = "track"
@@ -63,6 +67,12 @@ if final_features:
 else:
     st.info(f"No significant features found for Grade {grade}.")
 
+# st.subheader("Logistic Regression Curve")
+
+# # Plotting the S-Curve
+# # model.plot_s_curve()
+# model.plot_sigmoid_curve()
+
 # GENDER DISTRIBUTION VISUALIZATION
 st.subheader("👥 Gender Distribution by Predicted Track")
 gender_counts = model.get_gender_distribution_by_track()
@@ -70,7 +80,6 @@ st.write("### Gender Count Table")
 st.dataframe(gender_counts)
 st.write("### Bar Chart of Gender Distribution")
 st.bar_chart(gender_counts)
-
 
 # st.subheader("📌 Overall Grade Statistics (All Students)")
 # overall_stats = df[final_features].agg(['min', 'max', 'mean', 'median', 'count']).T
