@@ -1,63 +1,82 @@
-import sys
-import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 import streamlit as st
 import pandas as pd
-import numpy as np
-from utils.logistic_regression import LogisticRegressionModel
+
+from utils.dataloader import load_data
 from utils.feature_selection import FeatureSelector
-import matplotlib.pyplot as plt
-import seaborn as sns
+from utils.logistic_regression import LogisticModel
 
-# Load dataset
-df = pd.read_csv('data/synthetic_student_data.csv')
+st.title("📊 Logistic Regression Model by Grade Level")
 
-# Target column
-target_column = 'track'  # Example target column, replace with your actual target
+df = load_data()
+target_column = "track"
+grades = [7, 8, 9, 10]
+grade = st.selectbox("Select Grade Level", grades)
 
-# Initialize FeatureSelector class
-feature_selector = FeatureSelector(df, target_column)
+selector = FeatureSelector(df, target_column)
 
-# Feature selection
-selected_features = feature_selector.select_features(grade="7")
+# --- CUMULATIVE FEATURE SELECTION LOGIC ---
+included_grades = list(range(7, grade + 1))
+final_features = []
 
-# Train Logistic Regression model
-logistic_model = LogisticRegressionModel()
-model, y_test, y_pred, y_prob = logistic_model.train(df, selected_features, target_column, grade="7")
+for g in included_grades:
+    feats = selector.select_features(g)
+    prefix = f"g{g}_"
+    grade_feats = [f for f in feats if f.startswith(prefix)]
+    final_features.extend(grade_feats)
 
-# Display model metrics
-st.title("Logistic Regression Model")
+# Add age and gender only once
+if 'age' in df.columns:
+    final_features.append('age')
+if 'gender' in df.columns:
+    final_features.append('gender')
 
-st.write("Model trained successfully!")
+# Remove duplicates while preserving order
+final_features = list(dict.fromkeys(final_features))
 
-# Show the model coefficients to understand feature importance
-st.write("Model Coefficients (Feature Importance):")
-coefficients = model.coef_[0]
-features = selected_features
-feature_importance = pd.DataFrame({
-    'Feature': features,
-    'Coefficient': coefficients
-})
-feature_importance['Importance'] = np.abs(feature_importance['Coefficient'])  # Absolute value of coefficients
-feature_importance = feature_importance.sort_values(by='Importance', ascending=False)
+# --- Train Model ---
+model = LogisticModel(df, target_column)
+model.train_model(grade, final_features)
 
-st.write(feature_importance)
+# Filter out non-subject features when calculating stats
+filtered_features = [feat for feat in final_features if feat not in ['gender', 'age']]
 
-# Visualize feature importance as a bar chart
-st.write("Feature Importance Visualization:")
-plt.figure(figsize=(10, 6))
-sns.barplot(x='Importance', y='Feature', data=feature_importance)
-plt.title('Feature Importance from Logistic Regression')
-st.pyplot(plt)
+subject_stats = model.calculate_grade_statistics(filtered_features)
+subject_grade_total = subject_stats['Academic (Count)'].sum() + subject_stats['TVL (Count)'].sum()
 
-# Show the grades/subject combinations that contribute to prediction
-st.write("Grades/Subject Combinations Contributing to Prediction:")
+# --- Display Outputs ---
+st.title("📚 Grade Statistics")
 
-# Example: you can display how grades and subjects (e.g., Math, Science) contribute to the model's prediction
-# For simplicity, let's display the top important features and explain which subjects/grades they correspond to.
-# This can be customized based on your dataset.
+st.subheader("📌 Grade Statistics by Predicted Track")
+st.subheader("Track Prediction Distribution")
+for track, count in model.prediction_counts.items():
+    st.write(f"**{track}:** {count} ({model.track_distribution_data[track]:.2f}%)")
+st.write(f"**Total Predictions:** {model.total_predictions}")
+st.write(f"**Total Subject Grade Entries:** {int(subject_grade_total)}")
 
-for feature in feature_importance['Feature'].head(10):  # Show top 10 features
-    st.write(f"### {feature}")
-    # Assuming the feature names are related to subjects, you can include logic to display more info about each feature
-    st.write(f"Grade/Subject Combination: {feature}")  # Customize this according to your actual features
+st.write("### Subject Grades (Grouped by Predicted Track)")
+st.write(subject_stats)
+
+# Show features used
+st.markdown(f"### ✅ Features Used for Grade {grade}")
+if final_features:
+    st.markdown(f"**Grade {grade}:** " + ", ".join(final_features))
+else:
+    st.info(f"No significant features found for Grade {grade}.")
+
+# GENDER DISTRIBUTION VISUALIZATION
+st.subheader("👥 Gender Distribution by Predicted Track")
+gender_counts = model.get_gender_distribution_by_track()
+st.write("### Gender Count Table")
+st.dataframe(gender_counts)
+st.write("### Bar Chart of Gender Distribution")
+st.bar_chart(gender_counts)
+
+
+# st.subheader("📌 Overall Grade Statistics (All Students)")
+# overall_stats = df[final_features].agg(['min', 'max', 'mean', 'median', 'count']).T
+# overall_stats.columns = ['Min', 'Max', 'Mean', 'Median', 'Count']
+# all_subject_count = overall_stats['Count'].sum()
+# # st.write(f"**Total Subject Grades:** {int(all_subject_count)}")
+
+# st.write("### Overall Subject Grades (All Students)")
+# st.write(overall_stats)

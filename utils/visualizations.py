@@ -5,7 +5,6 @@ import pandas as pd
 from sklearn.preprocessing import label_binarize
 from sklearn.metrics import roc_curve, auc
 
-# Visualization class to handle all visualizations
 class Visualizations:
     def __init__(self, df):
         self.df = df

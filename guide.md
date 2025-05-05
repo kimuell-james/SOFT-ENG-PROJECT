@@ -71,3 +71,16 @@ evaluation.py
 feature_selection.py 
 logistic_regression.py 
 visualizations.py
+
+You can print or visualize a summary like this:
+Grade 7
+| Subject      | Academic | TVL      |
+|--------------|----------|----------|
+| g7_filipino  | 87-90    | 84-90    |
+| g7_english   | 88-90    | 83-92    |
+| g7_math      | 85-94    | 87-90    |
+| g7_science   | 85-95    | 86-91    | 
+| g7_ap        | 87-93    | 85-94    | 
+| g7_tle       | 83-91    | 88-92    | 
+| g7_mapeh     | 82-96    | 84-93    | 
+| g7_esp       | 85-83    | 84-91    | 

@@ -1,7 +1,6 @@
-# Let's define the corrected FeatureSelector class to include scores_per_grade and significant_features.
-
-from sklearn.feature_selection import f_classif
 from sklearn.preprocessing import StandardScaler
+from sklearn.feature_selection import f_classif
+from scipy.stats import chi2_contingency
 import pandas as pd
 
 class FeatureSelector:
@@ -11,40 +10,60 @@ class FeatureSelector:
         self.scores_per_grade = {}
         self.significant_features = {}
 
+    def chi_square_test(self, feature_col, target_col):
+        if feature_col not in self.df.columns or target_col not in self.df.columns:
+            raise KeyError(f"Columns '{feature_col}' or '{target_col}' not found in the dataframe.")
+        
+        # Compute the contingency table for chi-square
+        contingency_table = pd.crosstab(self.df[feature_col], self.df[target_col])
+        chi2, p, dof, expected = chi2_contingency(contingency_table)
+        return p
+
     def select_features(self, grade_level):
-        grade_prefix = f"g{grade_level}_"
-        grade_columns = [col for col in self.df.columns if col.startswith(grade_prefix)]
+        # Select the grade columns up to the selected grade level
+        grade_columns = []
+        for g in range(7, grade_level + 1):
+            grade_columns.extend([col for col in self.df.columns if col.startswith(f"g{g}_")])
+        
+        # Add age and gender columns to the list of features
         additional_features = ["age", "gender"]
         features = grade_columns + [f for f in additional_features if f in self.df.columns]
 
+        print("Available grade columns:", grade_columns)
+        print("Available columns:", self.df.columns)
+
+        # Prepare data for feature selection
         X = self.df[features]
         y = self.df[self.target_column]
 
-        # Ensure gender is treated as categorical (if not already encoded)
-        if "gender" in X.columns and X["gender"].dtype == object:
-            X["gender"] = X["gender"].astype("category").cat.codes
+        # Store the feature scores
+        scores_df = pd.DataFrame(columns=["Feature", "Score", "P-Value"])
 
-        # Scale numerical features (grades and age) for ANOVA
-        numeric_cols = X.select_dtypes(include=["float64", "int64"]).columns
-        X_scaled = X.copy()
-        X_scaled[numeric_cols] = StandardScaler().fit_transform(X[numeric_cols])
+        for feature in X.columns:
+            if X[feature].dtype in ["float64", "int64"]:  # Numerical feature
+                # Scale numerical features before ANOVA
+                X_scaled = X[feature].values.reshape(-1, 1)
+                X_scaled = StandardScaler().fit_transform(X_scaled)
+                
+                # Perform ANOVA (f_classif) for numerical features
+                f_values, p_values = f_classif(X_scaled, y)
+                temp_df = pd.DataFrame({"Feature": [feature], "Score": [f_values[0]], "P-Value": [p_values[0]]})
+                scores_df = pd.concat([scores_df, temp_df], ignore_index=True)
+            else:  # Categorical feature (e.g., gender)
+                # Perform Chi-Square test for categorical features
+                print(f"Chi-Square test for: {feature} with target: {self.target_column}")
+                p_value = self.chi_square_test(feature, self.target_column)
+                temp_df = pd.DataFrame({"Feature": [feature], "Score": [None], "P-Value": [p_value]})
+                scores_df = pd.concat([scores_df, temp_df], ignore_index=True)
 
-        # Compute ANOVA F-scores and p-values
-        f_values, p_values = f_classif(X_scaled, y)
+        # Set the feature as the index
+        scores_df.set_index("Feature", inplace=True)
 
-        # Store results in DataFrame
-        scores_df = pd.DataFrame({
-            "Feature": X.columns,
-            "F Score": f_values,
-            "P-Value": p_values
-        }).set_index("Feature")
-
-        # Store all scores
+        # Store all scores for this grade level
         self.scores_per_grade[grade_level] = scores_df
 
-        # Identify statistically significant features (p < 0.05)
+        # Identify significant features (p < 0.05)
         sig_features = scores_df[scores_df["P-Value"] < 0.05].index.tolist()
         self.significant_features[grade_level] = sig_features
 
         return sig_features
-
