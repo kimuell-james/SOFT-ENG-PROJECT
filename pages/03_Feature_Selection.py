@@ -7,7 +7,7 @@ from scipy.stats import chi2_contingency
 from utils.feature_selection import FeatureSelector
 from utils.dataloader import load_data
 
-st.title("🧠 Feature Selection by Grade Level")
+st.title("🧠 Feature Selection")
 
 # Load dataset
 df = load_data()

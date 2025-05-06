@@ -47,7 +47,7 @@ st.dataframe(eval_results["confusion_matrix_df"])
 st.subheader("Classification Report")
 st.dataframe(eval_results["classification_report"])
 
-# Plot ROC Curve if binary
+# Plot ROC Curve
 if eval_results["roc_curve"][0] is not None:
     fpr, tpr = eval_results["roc_curve"]
     auc_score = eval_results["roc_auc"]

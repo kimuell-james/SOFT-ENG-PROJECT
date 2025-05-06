@@ -13,6 +13,7 @@ class LogisticModel:
         self.df = df
         self.target_column = target_column
         self.model = LogisticRegression(max_iter=1000)
+        # self.model = LogisticRegression(class_weight='balanced', max_iter=1000)
         self.feature_importances = None
         self.track_distribution_data = None
         self.grade_stats = None
@@ -38,6 +39,7 @@ class LogisticModel:
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
         self.model.fit(X_train, y_train)
+        self.feature_names = features
 
         self.X_test = X_test
         self.y_test = y_test
@@ -50,39 +52,6 @@ class LogisticModel:
 
         self.df_with_predictions = filtered_df.copy()
         self.df_with_predictions['predicted_track'] = self.model.predict(filtered_df[features])
-
-    def get_s_curve_data(self):
-        # Generate S-curve data (probabilities) for overall logistic regression
-        feature_values = np.linspace(0, 1, 100)  # Range of probabilities from 0 to 1
-
-        # Create an array where each row is the feature values (same value repeated for all features)
-        X_feat = np.column_stack([feature_values for _ in range(self.X_test.shape[1])])
-        
-        # Predict probabilities for the test set
-        y_prob = self.model.predict_proba(X_feat)[:, 1]  # Assuming class 1 is the predicted class (TVL)
-
-        return feature_values, y_prob
-
-    # def plot_sigmoid_curve(self):
-    #     import streamlit as st
-
-    #     # We'll pick just one feature for visualization, e.g., the first feature
-    #     X_test = self.X_test.iloc[:, 0].values.reshape(-1, 1)
-    #     y_test = self.y_test.values
-
-    #     # Create evenly spaced values for plotting the sigmoid
-    #     X_range = np.linspace(X_test.min(), X_test.max(), 300).reshape(-1, 1)
-    #     y_prob = self.model.predict_proba(X_range)[:, 1]
-
-    #     # Plot
-    #     fig, ax = plt.subplots()
-    #     ax.scatter(X_test, y_test, color='blue', alpha=0.5, label='Actual')
-    #     ax.plot(X_range, y_prob, color='red', linewidth=2, label='Sigmoid Curve')
-    #     ax.set_xlabel("Feature")
-    #     ax.set_ylabel("Probability")
-    #     ax.set_title("Logistic Regression Sigmoid Curve")
-    #     ax.legend()
-    #     st.pyplot(ax)
 
     def calculate_grade_statistics(self, features):
         df_with_track = self.X_test.copy()
@@ -123,6 +92,17 @@ class LogisticModel:
         )
 
         return result_df
+    
+    def get_coefficients(self):
+        if self.model and self.feature_names:
+            coefs = self.model.coef_[0]
+            return pd.DataFrame({
+                "Feature": self.feature_names,
+                "Coefficient": coefs
+            }).sort_values(by="Coefficient", ascending=False)
+        else:
+            return pd.DataFrame(columns=["Feature", "Coefficient"])
+
 
     def get_track_distribution(self):
         return self.track_distribution_data

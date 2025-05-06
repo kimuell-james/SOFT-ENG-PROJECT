@@ -9,7 +9,7 @@ from utils.dataloader import load_data
 from utils.feature_selection import FeatureSelector
 from utils.logistic_regression import LogisticModel
 
-st.title("🤖 Logistic Regression Model by Grade Level")
+st.title("🤖 Logistic Regression Model")
 
 df = load_data()
 target_column = "track"
@@ -48,7 +48,7 @@ subject_stats = model.calculate_grade_statistics(filtered_features)
 subject_grade_total = subject_stats['Academic (Count)'].sum() + subject_stats['TVL (Count)'].sum()
 
 # --- Display Outputs ---
-st.title("📚 Grade Statistics")
+st.title(" Grade Statistics")
 
 st.subheader("📌 Grade Statistics by Predicted Track")
 st.subheader("Track Prediction Distribution")
@@ -57,28 +57,73 @@ for track, count in model.prediction_counts.items():
 st.write(f"**Total Predictions:** {model.total_predictions}")
 st.write(f"**Total Subject Grade Entries:** {int(subject_grade_total)}")
 
+# st.write("### Subject Grades (Grouped by Predicted Track)")
+# st.write(subject_stats)
+
 st.write("### Subject Grades (Grouped by Predicted Track)")
-st.write(subject_stats)
+
+# Split subject_stats into Academic and TVL
+# Separate Academic and TVL statistics
+academic_cols = [col for col in subject_stats.columns if "Academic" in col]
+tvl_cols = [col for col in subject_stats.columns if "TVL" in col]
+
+# Keep the index (subject names) and include only relevant columns
+academic_table = subject_stats[academic_cols].copy()
+academic_table.index = subject_stats.index
+
+tvl_table = subject_stats[tvl_cols].copy()
+tvl_table.index = subject_stats.index
+
+st.markdown("#### Academic")
+st.dataframe(academic_table)
+
+st.markdown("#### TVL")
+st.dataframe(tvl_table)
 
 # Show features used
-st.markdown(f"### ✅ Features Used for Grade {grade}")
+st.markdown(f"##### ✅ Features Used for Grade {grade}")
 if final_features:
     st.markdown(f"**Grade {grade}:** " + ", ".join(final_features))
 else:
     st.info(f"No significant features found for Grade {grade}.")
 
-# st.subheader("Logistic Regression Curve")
+# Get coefficients
+coeff_df = model.get_coefficients()
 
-# # Plotting the S-Curve
-# # model.plot_s_curve()
-# model.plot_sigmoid_curve()
+if not coeff_df.empty:
+    st.subheader("Logistic Regression Coefficients")
+    st.markdown(
+        "- **Positive coefficient**: Subject leans more toward Academic track\n"
+        "- **Negative coefficient**: Subject pushes prediction toward TVL\n"
+    )
+
+    # Create a Plotly bar chart
+    fig = px.bar(coeff_df, 
+                 x="Feature", 
+                 y="Coefficient", 
+                 color="Coefficient",  # Color by the coefficient values
+                 color_continuous_scale="RdYlGn",  # Use a diverging color scale (red to green)
+                 labels={"Coefficient": "Coefficient Value", "Feature": "Subject"},
+                 title="Logistic Regression Coefficients by Subject")
+
+    # Show the chart
+    fig.update_layout(
+        xaxis_title="Subject",  # Set the x-axis label
+        yaxis_title="Coefficient Value",  # Set the y-axis label
+        xaxis_tickangle=-45,  # Rotate the x-axis labels for better readability
+        # plot_bgcolor='white'  # Set background color to white for better contrast
+    )
+    
+    st.plotly_chart(fig)
+else:
+    st.info("No coefficients available. Make sure the model has been trained.")
 
 # GENDER DISTRIBUTION VISUALIZATION
-st.subheader("👥 Gender Distribution by Predicted Track")
+st.subheader("Gender Distribution by Predicted Track")
 gender_counts = model.get_gender_distribution_by_track()
-st.write("### Gender Count Table")
+st.write("#### Gender Count Table")
 st.dataframe(gender_counts)
-st.write("### Bar Chart of Gender Distribution")
+st.write("#### Bar Chart of Gender Distribution")
 st.bar_chart(gender_counts)
 
 # st.subheader("📌 Overall Grade Statistics (All Students)")
