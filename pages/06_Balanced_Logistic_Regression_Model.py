@@ -7,7 +7,7 @@ import seaborn as sns
 
 from utils.dataloader import load_data
 from utils.feature_selection import FeatureSelector
-from utils.logistic_regression import LogisticModel
+from utils.balanced_logreg import BalancedLogisticModel
 
 st.title("🤖 Logistic Regression Model")
 
@@ -38,7 +38,7 @@ if 'gender' in df.columns:
 final_features = list(dict.fromkeys(final_features))
 
 # --- Train Model ---
-model = LogisticModel(df, target_column)
+model = BalancedLogisticModel(df, target_column)
 model.train_model(grade, final_features)
 
 # Filter out non-subject features when calculating stats
@@ -84,6 +84,7 @@ if not coeff_df.empty:
     )
     
     st.plotly_chart(fig)
+    # st.write(coeff_df)
 else:
     st.info("No coefficients available. Make sure the model has been trained.")
 

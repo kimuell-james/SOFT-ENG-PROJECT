@@ -9,7 +9,7 @@ import numpy as np
 
 from utils.dataloader import load_data
 from utils.feature_selection import FeatureSelector
-from utils.logistic_regression import LogisticModel
+from utils.balanced_logreg import BalancedLogisticModel
 from utils.evaluation import evaluate_model
 
 st.title("🎯 Model Evaluation Metrics")
@@ -27,7 +27,7 @@ if not selected_features:
     st.warning("No significant features found for this grade.")
     st.stop()
 
-model = LogisticModel(df, target)
+model = BalancedLogisticModel(df, target)
 model.train_model(grade, selected_features)
 
 # Get predicted probabilities

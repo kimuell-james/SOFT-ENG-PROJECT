@@ -37,7 +37,7 @@ class FeatureSelector:
         y = self.df[self.target_column]
 
         # Store the feature scores
-        scores_df = pd.DataFrame(columns=["Feature", "Score", "P-Value"])
+        scores_df = pd.DataFrame(columns=["Feature", "F-Score", "P-Value"])
 
         for feature in X.columns:
             if X[feature].dtype in ["float64", "int64"]:  # Numerical feature
@@ -47,13 +47,14 @@ class FeatureSelector:
                 
                 # Perform ANOVA (f_classif) for numerical features
                 f_values, p_values = f_classif(X_scaled, y)
-                temp_df = pd.DataFrame({"Feature": [feature], "Score": [f_values[0]], "P-Value": [p_values[0]]})
+                temp_df = pd.DataFrame({"Feature": [feature], "F-Score": [f_values[0]], "P-Value": [p_values[0]]})
                 scores_df = pd.concat([scores_df, temp_df], ignore_index=True)
+                
             else:  # Categorical feature (e.g., gender)
                 # Perform Chi-Square test for categorical features
                 print(f"Chi-Square test for: {feature} with target: {self.target_column}")
                 p_value = self.chi_square_test(feature, self.target_column)
-                temp_df = pd.DataFrame({"Feature": [feature], "Score": [None], "P-Value": [p_value]})
+                temp_df = pd.DataFrame({"Feature": [feature], "F-Score": [None], "P-Value": [p_value]})
                 scores_df = pd.concat([scores_df, temp_df], ignore_index=True)
 
         # Set the feature as the index

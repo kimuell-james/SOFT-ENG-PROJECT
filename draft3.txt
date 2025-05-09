@@ -155,3 +155,28 @@ class Visualizations:
         plt.xlabel("Coefficient Value")
         plt.tight_layout()
         plt.show()
+
+# # -----------------------------------------------
+# # Correlation Matrix
+# st.subheader("Correlation Matrix")
+
+# corr_matrix = df.corr(numeric_only=True)
+
+# plt.figure(figsize=(12, 8))
+# sns.heatmap(corr_matrix, annot=True, cmap='coolwarm', fmt=".2f", square=True)
+# st.pyplot(plt)
+
+# # Unstack and filter pairs with high correlation (excluding self-correlations)
+# high_corr_pairs = (
+#     corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(bool))
+#     .stack()
+#     .reset_index()
+# )
+
+# high_corr_pairs.columns = ['Feature 1', 'Feature 2', 'Correlation']
+# high_corr_pairs = high_corr_pairs[
+#     (high_corr_pairs['Correlation'] >= 0.8) | (high_corr_pairs['Correlation'] <= -0.8)
+# ]
+
+# st.subheader("Highly Correlated Features (|r| ≥ 0.8)")
+# st.write(high_corr_pairs)
