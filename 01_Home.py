@@ -21,12 +21,12 @@ This system uses Logistic Regression to predict the most suitable Senior High Sc
 # --- How to Use the App ---
 st.markdown("### 📌 How to Use This App")
 st.markdown("""
-- 📥 **Data Overview** tab to explore and understand the structure, features, and distribution of the student dataset.
-- 🧠 **Feature Selection** tab to identify the most relevant academic and demographic factors that influence Senior High School track predictions.
+- 📥 **Data Overview** page to explore and understand the structure, features, and distribution of the student dataset.
+- 🧠 **Feature Selection** page to identify the most relevant academic and demographic factors that influence Senior High School track predictions.
 - 🤖 **Logistic Regression Model** page to analyze predictions based on the selected features and visualize the model’s decision outcomes.
-- 🎯 **Evaluation Metrics** section to assess the model’s performance using accuracy, confusion matrix, classification report, and ROC curve.
--    **Balanced Logistic Regression Model**
--    **Evaluation Metrics** for Balanced Model
+- 🎯 **Evaluation Metrics** page to assess the model’s performance using accuracy, confusion matrix, classification report, and ROC curve.
+- 📊 **Balanced Logistic Regression Model** page to page to address class imbalance applying `class_weight='balanced'` and improve prediction fairness across student groups.
+- 📈 **Evaluation Metrics for Balanced Model** page to evaluate the balanced model’s performance and compare it with the baseline model.
 """)
 
 

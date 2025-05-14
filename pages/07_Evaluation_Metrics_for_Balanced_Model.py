@@ -12,7 +12,7 @@ from utils.feature_selection import FeatureSelector
 from utils.balanced_logreg import BalancedLogisticModel
 from utils.evaluation import evaluate_model
 
-st.title("🎯 Model Evaluation Metrics")
+st.title("📈 Model Evaluation Metrics")
 
 # Setup
 df = load_data()

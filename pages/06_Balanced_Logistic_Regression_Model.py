@@ -9,7 +9,7 @@ from utils.dataloader import load_data
 from utils.feature_selection import FeatureSelector
 from utils.balanced_logreg import BalancedLogisticModel
 
-st.title("🤖 Logistic Regression Model")
+st.title("📊 Balanced Logistic Regression Model")
 
 df = load_data()
 target_column = "track"
@@ -62,8 +62,8 @@ coeff_df = model.get_coefficients()
 if not coeff_df.empty:
     st.subheader("Logistic Regression Coefficients")
     st.markdown(
-        "- **Positive coefficient**: Feature leans more toward Academic track\n"
-        "- **Negative coefficient**: Feature pushes prediction toward TVL\n"
+        "- **Positive coefficient**: Feature leans more toward TVL track\n"
+        "- **Negative coefficient**: Feature pushes prediction toward Academic\n"
     )
 
     # Create a Plotly bar chart
